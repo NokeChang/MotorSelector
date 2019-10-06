@@ -1,0 +1,132 @@
+﻿
+@{
+    ViewBag.Title = "傳動計算器";
+}
+
+<h2>傳動計算器</h2>
+@{ Html.BeginForm("Result", "Calculator", FormMethod.Post);}
+<p>直線速度(mm/s): @Html.TextBox("value1")<img id="message1" src="~/Image/icons8-tick-box-64.png" width="20" /></p>
+<p>皮帶輪直徑(mm): @Html.TextBox("value2")<img id="message2" src="~/Image/icons8-tick-box-64.png" width="20" /></p>
+<p>行進阻力(N): @Html.TextBox("value3")<img id="message3" src="~/Image/icons8-tick-box-64.png" width="20" /></p>
+<p>減速機齒比: @Html.TextBox("value4")<img id="message4" src="~/Image/icons8-tick-box-64.png" width="20" /></p>
+<p>減速機效率: @Html.TextBox("value5")<img id="message5" src="~/Image/icons8-tick-box-64.png" width="20" /></p>
+@{ Html.EndForm();}
+
+<p>
+    <input type="button" value="計算" id="ajax-result" class="btn btn-primary" /> 
+    <span> <input type="button" value="清除" id="clear" class="btn btn-danger"/></span>
+</p>
+<p>馬達所需轉速(rpm): <span id="motorrevolution"></span></p>
+<p>馬達所需扭力(N-m): <span id="motortorque"></span></p>
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            $('#ajax-result').click(function () {
+                var numbers = [ $('#value1').val(),
+                    $('#value2').val(),
+                    $('#value3').val(),
+                    $('#value4').val(),
+                    $('#value5').val()
+                ];
+                $.ajax(
+                    {
+                        type: 'post',
+                        url: '../Selector/AjaxResult',
+                        data: {
+                            numbers: numbers
+                        },
+                        dataType: 'json',
+                        success: function (data, stutas, xhr) {
+                            $('#motorrevolution').html(data.MotorRevolution);
+                            $('#motortorque').html(data.MotorTorque);
+                        },
+                        error: function (xhr, textStatus, data) {
+                            alert("伺服器發生異常");
+                        }
+                    }
+                )
+            });
+
+            
+            for (var i = 1; i < 6; i++) {
+                var s = '#message' + i;
+                $(s).hide();
+            }
+
+            var checkedList = [false, false, false, false, false];
+            $('#ajax-result').attr("disabled", "disabled");
+            $('#value1').on('input', function (event) {
+                checkedList[0] = checkNumber(event.target.value);
+                errorMessage(checkedList[0],"#message1");
+                totalCheck(checkedList);
+            });
+            $('#value2').on('input', function (event) {
+                checkedList[1] = checkNumber(event.target.value);
+                errorMessage(checkedList[1],"#message2");
+                totalCheck(checkedList);
+            });
+            $('#value3').on('input', function (event) {
+                checkedList[2] = checkNumber(event.target.value);
+                errorMessage(checkedList[2],"#message3");
+                totalCheck(checkedList);
+            });
+            $('#value4').on('input', function (event) {
+                checkedList[3] = checkNumber(event.target.value);
+                errorMessage(checkedList[3],"#message4");
+                totalCheck(checkedList);
+            });
+            $('#value5').on('input', function (event) {
+                checkedList[4] = checkNumber(event.target.value);
+                errorMessage(checkedList[4],"#message5");
+                totalCheck(checkedList);
+            });
+
+            $('#clear').on('click', function () {
+                $('#value1').val("");
+                $('#value2').val("");
+                $('#value3').val("");
+                $('#value4').val("");
+                $('#value5').val("");
+                for (var i = 0; i < checkedList.length; i++){
+                    checkedList[i] = false;
+                    var j = i + 1;
+                    var selector = '#message' + j;
+                    $(selector).hide();
+                }
+                totalCheck(checkedList);
+            });
+        });
+
+        function checkNumber(num) {
+            var checked = false;
+            if (num != "" && isFinite(num)) {
+                checked = true;
+            }
+            else {
+                checked = false;
+            }
+            return checked;
+        }
+
+        function totalCheck(list) {
+            var totalChecked = list[0] && list[1] && list[2] && list[3] && list[4];
+            if (totalChecked) {
+                $('#ajax-result').attr("disabled", false);
+            }
+            else {
+                $('#ajax-result').attr("disabled", "disabled");
+            }
+        }
+
+        function errorMessage(checked, target) {
+            if (checked) {
+                $(target).attr('src', '../Image/icons8-tick-box-64.png').show();
+            }
+            else {
+                $(target).attr('src', '../Image/icons8-cancel-64.png').show();
+            }
+        }
+    </script>
+}
+
