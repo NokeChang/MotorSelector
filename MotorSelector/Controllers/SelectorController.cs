@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using MotorSelector.Models;
 
 namespace MotorSelector.Controllers
 {
     public class SelectorController : Controller
     {
+        private string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\User\source\repos\MotorSelector\MotorSelector\App_Data\Database1.mdf;Integrated Security=True";
         public ActionResult Index()
         {
-            return View();
+            var motors = new ModelHelper<Motor>(connectionString);
+            var motorList = motors.GetAllRecords();
+            return View(motorList);
         }
         // GET: Selector
         public ActionResult AjaxResult(List<string> numbers)
@@ -26,6 +30,13 @@ namespace MotorSelector.Controllers
             result.GetLineSpeed();
             result.GetMotorTorque();
             return Json(result, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult GetMotor(int index)
+        {
+            var motors = new ModelHelper<Motor>(connectionString);
+            var motor = motors.GetRecord(index);
+            return Json(motor, JsonRequestBehavior.AllowGet);
         }
         class ResultPackage
         {

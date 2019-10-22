@@ -1,6 +1,21 @@
 ﻿
+@using MotorSelector.Models
+@model  List<Motor>
 @{
     ViewBag.Title = "傳動計算器";
+}
+@{ 
+    var list = new List<SelectListItem>();
+    foreach (var m in Model)
+    {
+        var item = new SelectListItem
+        {
+            Text = m.Name,
+            Value = m.Id.ToString()
+        };
+        list.Add(item);
+    }
+    ViewData["motor_list"] = list;
 }
 
 <h2>傳動計算器</h2>
@@ -19,9 +34,19 @@
 <p>馬達所需轉速(rpm): <span id="motorrevolution"></span></p>
 <p>馬達所需扭力(N-m): <span id="motortorque"></span></p>
 
+<p>@Html.DropDownList("motor_list", null, new { @id = "ddl1" })</p>
+<p>馬達型號：<span id="motor_name"> </span></p>
+<p>馬達扭力：<span id="motor_torque"> </span></p>
+<p>馬達轉速：<span id="motor_rpm"> </span></p>
+
 @section scripts{
     <script>
         $(document).ready(function () {
+
+            $('#motor_name').text('@Model[0].Name');
+            $('#motor_torque').text('@Model[0].Torque');
+            $('#motor_rpm').text('@Model[0].Rpm');
+
             $('#ajax-result').click(function () {
                 var numbers = [ $('#value1').val(),
                     $('#value2').val(),
@@ -95,6 +120,28 @@
                     $(selector).hide();
                 }
                 totalCheck(checkedList);
+            });
+
+            $('#ddl1').change(function () {
+                var index = $('#ddl1 option:selected').val();
+                $.ajax(
+                    {
+                        type: 'post',
+                        url: '../Selector/GetMotor',
+                        data: {
+                            index: index
+                        },
+                        dataType: 'json',
+                        success: function (data, stutas, xhr) {
+                            $('#motor_name').text(data.Name);
+                            $('#motor_torque').text(data.Torque);
+                            $('#motor_rpm').text(data.Rpm);
+                        },
+                        error: function (xhr, textStatus, data) {
+                            alert("伺服器發生異常");
+                        }
+                    }
+                )
             });
         });
 
